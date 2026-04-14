@@ -79,12 +79,12 @@ textarea:focus{border-color:#888;}
 
 <div class="wrap">
   <h1>Mappatura ruoli e mansioni — Salute di Ferro</h1>
-  <p class="subtitle">Segna ogni mansione con <strong>X</strong> (la faccio ora), <strong>+</strong> (vorrei aggiungerla), <strong>−</strong> (voglio toglierla / delegarla).<br>Se clicchi −, indica a chi delegheresti. Poi rispondi alle domande aperte e clicca "Invia" per mandare le tue risposte.</p>
+  <p class="subtitle">Segna ogni mansione con <strong>X</strong> (la faccio ora), <strong>+</strong> (vorrei aggiungerla), <strong>−</strong> (vorrei toglierla / delegarla).<br>Se clicchi −, indica a chi la delegheresti. Poi rispondi alle domande aperte e clicca "Invia" per inviare il form.</p>
 
   <div class="legend">
     <div class="leg"><div class="badge bx">X</div>Lo sto facendo ora</div>
-    <div class="leg"><div class="badge bp">+</div>Vorrei aggiungerlo</div>
-    <div class="leg"><div class="badge bm">−</div>Voglio toglierlo — indico a chi</div>
+    <div class="leg"><div class="badge bp">+</div>Vorrei aggiungerlo <em style="color:#888;font-size:12px;margin-left:4px;">(HO FAME)</em></div>
+    <div class="leg"><div class="badge bm">−</div>Vorrei toglierlo <em style="color:#888;font-size:12px;margin-left:4px;">(È UNO SBATTI)</em> — indico a chi</div>
   </div>
 
   <div class="name-row">
@@ -265,9 +265,16 @@ secs.forEach((sec,si)=>{
 
 function tog(key,type){
   const s=state[key];
-  s[type]=!s[type];
-  document.getElementById(`t${type}${key}`).classList.toggle(`a${type}`,s[type]);
-  if(type==='m') document.getElementById(`dr${key}`).classList.toggle('show',s[type]);
+  const newVal=!s[type];
+  s[type]=newVal;
+  if(newVal){
+    if(type==="x"&&s.p){s.p=false;document.getElementById("tp"+key).classList.remove("ap");}
+    if(type==="p"&&s.x){s.x=false;document.getElementById("tx"+key).classList.remove("ax");}
+    if(type==="p"&&s.m){s.m=false;document.getElementById("tm"+key).classList.remove("am");document.getElementById("dr"+key).classList.remove("show");}
+    if(type==="m"&&s.p){s.p=false;document.getElementById("tp"+key).classList.remove("ap");}
+  }
+  document.getElementById("t"+type+key).classList.toggle("a"+type,s[type]);
+  if(type==="m") document.getElementById("dr"+key).classList.toggle("show",s[type]);
   updateCounts();
 }
 
