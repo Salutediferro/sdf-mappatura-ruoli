@@ -339,7 +339,7 @@ async function submitForm(){
         'Content-Type':'application/json',
         'apikey':SB_KEY,
         'Authorization':`Bearer ${SB_KEY}`,
-        'Prefer':'return=minimal'
+        'Prefer':'resolution=merge-duplicates,return=minimal'
       },
       body:JSON.stringify(payload)
     });
