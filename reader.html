@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Risposte Mappatura — SDF</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:15px;}
+
+/* Login */
+.login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.login-box{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:2rem;width:100%;max-width:340px;}
+.login-box h2{font-size:18px;font-weight:600;margin-bottom:.4rem;}
+.login-box p{font-size:13px;color:#888;margin-bottom:1.5rem;}
+.login-box input{width:100%;border:1px solid #ddd;border-radius:8px;padding:10px 13px;font-size:14px;outline:none;margin-bottom:10px;}
+.login-box input:focus{border-color:#888;}
+.login-box button{width:100%;padding:10px;border-radius:8px;border:none;background:#1a1a1a;color:#fff;font-size:14px;cursor:pointer;font-weight:500;}
+.login-box button:hover{background:#333;}
+.login-err{font-size:12px;color:#ef4444;margin-top:8px;min-height:18px;}
+
+/* App */
+.app{display:none;}
+.app.show{display:block;}
+
+.topbar{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.topbar h1{font-size:16px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.count-badge{font-size:13px;color:#888;}
+.logout-btn{font-size:13px;color:#888;cursor:pointer;background:none;border:none;text-decoration:underline;}
+
+.persons{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;border-bottom:1px solid #e5e5e5;background:#fff;}
+.person-tab{padding:7px 16px;border-radius:20px;border:1px solid #ddd;background:#f5f5f5;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:all .12s;}
+.person-tab:hover{border-color:#999;}
+.person-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+
+.content{max-width:800px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+.meta{font-size:13px;color:#888;margin-bottom:2rem;}
+.meta strong{color:#1a1a1a;}
+
+.section{margin-bottom:1.5rem;}
+.sec-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e5e5e5;}
+.sec-title.new{color:#7c3aed;border-color:#ddd6fe;}
+.rows{display:flex;flex-direction:column;gap:3px;}
+
+.row{background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.row.highlight{border-color:#ddd6fe;}
+.row-label{font-size:14px;line-height:1.3;}
+.row-label span{font-size:12px;color:#999;display:block;margin-top:2px;}
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.badges{display:flex;gap:4px;}
+.badge{padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap;}
+.bx{background:#dbeafe;color:#1d4ed8;}
+.bp{background:#dcfce7;color:#166534;}
+.bm{background:#fee2e2;color:#991b1b;}
+.delega{font-size:11px;color:#888;}
+
+.row-empty{color:#ccc;font-style:italic;font-size:13px;padding:8px 0;}
+
+.open-q{margin-top:2.5rem;}
+.oq-title{font-size:17px;font-weight:600;margin-bottom:1rem;}
+.q-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;}
+.q-num{font-size:11px;color:#bbb;margin-bottom:4px;font-weight:600;}
+.q-text{font-size:13px;line-height:1.5;margin-bottom:8px;color:#888;}
+.q-answer{font-size:14px;line-height:1.6;color:#1a1a1a;}
+.q-empty{font-size:13px;color:#ccc;font-style:italic;}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:#999;font-size:14px;}
+.loading{text-align:center;padding:4rem;color:#999;font-size:14px;}
+
+.summary-bar{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:12px 16px;display:flex;gap:20px;margin-bottom:2rem;flex-wrap:wrap;}
+.sum-item{font-size:13px;display:flex;align-items:center;gap:6px;color:#555;}
+.sum-badge{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;flex-shrink:0;}
+.sc{font-weight:700;color:#222;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="loginScreen">
+  <div class="login-box">
+    <h2>Accesso riservato</h2>
+    <p>Risultati mappatura ruoli SDF</p>
+    <input type="password" id="pwdInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()">Entra</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <h1>Mappatura Ruoli — SDF</h1>
+    <div class="topbar-right">
+      <span class="count-badge" id="countBadge"></span>
+      <button class="logout-btn" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <div class="persons" id="personTabs"></div>
+
+  <div class="content" id="content">
+    <div class="loading" id="loadingMsg">Caricamento...</div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://jdoqydmmlyltcbfovvsc.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkb3F5ZG1tbHlsdGNiZm92dnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzI5NTYsImV4cCI6MjA5MTc0ODk1Nn0.Z_65YWNCtbGe_gO7prQ7UwrLBDtpq2S_70Co08dwrCc';
+const PASSWORD = 'sdf2026';
+
+const secs=[
+  {t:"Strategia & leadership",items:[["Definire visione e direzione dell'azienda","Dove andiamo, perché, con quale modello"],["Decisioni finali su prodotto, prezzi e offerta","Go/no-go su nuove features, tier, pivot"],["Rappresentare SDF con partner istituzionali","Prime riunioni e accordi ad alto livello"],["Gestire soci, CdA e governance societaria","Delibere, cap table, assemblee"],["Definire OKR e KPI aziendali trimestrali","Obiettivi misurabili per ogni reparto"],["Onboarding e integrazione nuovi C-level","Chi entra, come si inserisce nel team"]]},
+  {t:"Partnership & sviluppo commerciale",items:[["Accordi e gestione con laboratori (Synlab e futuri)","Condizioni, esclusività, prezzi convenzionati"],["Relazioni con ambassador e influencer tier-1","I nomi più importanti del network SDF"],["Partnership con palestre e centri fitness","Accordi B2B Nord Italia e oltre"],["Negoziazione con fornitori chiave","Prezzi, sconti, SLA, rinnovi"],["Sviluppo canale B2B2C (welfare aziendale)","Pacchetti salute per aziende e dipendenti"],["Relazione operativa con medici a contratto","Gabriele Abate, Militello, Rossini e altri"]]},
+  {t:"Marketing & crescita",items:[["Strategia di marketing e posizionamento brand","Dove e come ci posizioniamo nel mercato"],["Gestione advertising (Meta Ads, Google Ads)","Budget, campagne, ottimizzazione ROAS"],["Funnel di acquisizione lead (quiz, form, landing)","Dal primo contatto alla conversione"],["Strategia contenuti Instagram e social","Piano editoriale, frequenza, tone of voice"],["Email marketing e sequenze automatizzate","Newsletter, nurturing, CRM"],["WhatsApp marketing e broadcast","Comunicazioni a lead, clienti, ambassador"],["Relazioni con micro-influencer e creator","Profili medi per amplificazione brand"],["Briefing e supervisione consulente esterno (Oreste)","Cosa produrre, quando, come valutarlo"]]},
+  {t:"Vendita & educazione ambassador",items:[["Gestione diretta del processo di vendita","Call, chiusure, follow-up commerciale"],["Formazione ambassador: come vendono e cosa dicono","Educazione al brand e al prodotto SDF"],["Onboarding ambassador: dal reclutamento all'attivazione","Processo di ingresso nel network"],["Monitoraggio performance ambassador","Chi vende, chi no, chi va supportato"],["Gestione CRM e pipeline commerciale","Aggiornamento, reportistica, tool"]]},
+  {t:"Tecnologia & piattaforma digitale",items:[["Architettura e sviluppo piattaforma SDF","Backend, frontend, flussi utente, scalabilità"],["Dashboard: inserimento dati antropometrici e biometrici","Dove l'utente inserisce peso, misure, anamnesi"],["Dashboard: caricamento e archiviazione referti","Ogni esame sempre accessibile nell'app"],["Dashboard: grafici biomarcatori nel tempo","Visualizzazione andamento per marker o cluster"],["Dashboard: cartella sanitaria digitale personale","Storico completo e sicuro per ogni utente"],["Integrazioni con laboratori (ricezione dati referto)","Come i risultati arrivano automaticamente in piattaforma"],["Co-sviluppo funzionalità cliniche con Gabriele Abate","Supervisione medica sulle logiche della dashboard"],["Gestione strumenti interni team (CRM, PM, cloud, Notion)","Infrastruttura operativa quotidiana"],["Sicurezza dati e compliance GDPR per dati sanitari","Protezione dati sensibili degli utenti"]]},
+  {t:"Intelligenza artificiale & automazione (AI Dept.)",items:[["Strategia AI complessiva per SDF (ruolo CAIO)","Dove e come usiamo l'AI nel business e nel prodotto"],["Sviluppo agenti AI per marketing (content, email, ads)","Automazioni sul funnel e sui canali"],["AI per analisi e lettura pattern biomarcatori","Supporto alla lettura dei dati in dashboard"],["AI per produzione contenuti (testi, immagini, video)","Velocizzare output creativo con AI tools"],["Automazioni operative interne al team","Processi automatizzati per ridurre lavoro manuale"],["Integrazione AI nella dashboard utente","Suggerimenti, alert, insight sui dati personali"]]},
+  {t:"Operatività & organizzazione interna",items:[["Definire procedure e processi interni SDF","Come funzionano le cose dentro l'azienda"],["Coordinamento operativo tra reparti","Chi fa cosa, quando, con chi"],["Recruiting nuove figure (infermieri, staff, medici)","Trovare chi manca nel modello"],["Onboarding operativo nuovi collaboratori","Come si inseriscono praticamente nel team"],["Coordinamento infermieri di Ferro per prelievi domiciliari","Logistica, agendamento, prezzi agevolati"]]},
+  {t:"Finanza & struttura societaria",items:[["Controllo di gestione e P&L","Entrate, uscite, margini per canale"],["Struttura societaria e cap table","Quote, soci, governance legale"],["Pricing e modello economico dei servizi","Quanto costa cosa, margini, tier"],["Fundraising e relazioni con investitori","Se e quando si cerca capitale esterno"],["Gestione pagamenti e flussi di cassa","Incassi, riconciliazioni, pagamenti fornitori"]]},
+  {t:"Legale & compliance",items:[["Contratti con medici e professionisti sanitari","Forme contrattuali corrette per il modello SDF"],["Compliance normativa sanitaria italiana","Cosa può fare SDF, cosa no, dove sono i rischi"],["Privacy policy, GDPR, DPO per dati sanitari","Trattamento corretto dei dati degli utenti"],["Contratti con laboratori e partner B2B","Clausole, SLA, responsabilità"],["Tutela IP, marchio e brand SDF","Registrazione marchio, protezione identità"]]},
+  {t:"Contenuto creativo & brand",items:[["Direzione creativa e identità visiva SDF","Logo, palette, visual system, brand guidelines"],["Produzione contenuti video e foto","Shooting, reels, clip formative, behind the scenes"],["Copywriting (post, email, landing page, ads)","Scrittura testi commerciali e di brand"],["Piano editoriale e calendario contenuti","Cosa esce, quando, su quale canale"],["Gestione team creativo (Davide, Gianni, Sofia)","Briefing, feedback, consegne, qualità"],["Utilizzo AI per accelerare produzione contenuti","Immagini, testi, video AI-assisted con Gianni"]]},
+  {t:"Merchandising & prodotti fisici SDF \u2605 NUOVO",new:true,items:[["Direzione creativa del merchandising SDF","Concept visivo di magliette, top, capi e accessori"],["Sviluppo design grafiche e stampe per abbigliamento","Grafiche, loghi applicati, varianti colore per ogni capo"],["Selezione fornitori per stampa e produzione capi","Qualità materiali, costi, tempi, affidabilità"],["Gestione produzione magliette uomo (già avviata)","Riordini, varianti, taglie, qualità finale"],["Sviluppo linea top donna Salute di Ferro","Concept, design, produzione, lancio"],["Integrazione codici QR sui prodotti fisici","QR su capi che rimandano a contenuti SDF o alla dashboard"],["Gestione shop online SDF (merchandising)","Pagina prodotti sul sito, descrizioni, prezzi, stock"],["Logistica e spedizione ordini merchandising","Gestione magazzino, imballo, corrieri, tracking"],["Sviluppo nuovi prodotti fisici (accessori, gadget)","Borracce, sacche, cappellini, bande elastiche — piano futuro"],["Coordinamento merchandising con ambassador","Kit di benvenuto, gadget per chi entra nel network SDF"],["Shooting fotografico prodotti per e-commerce","Foto capi per sito, social, ads"],["Analisi vendite e performance merchandising","Quali prodotti vendono, margini, riordini"]]},
+  {t:"Coordinamento sanitario (ruolo SDF — non clinico)",items:[["Coordinamento infermieri di Ferro per prelievi","Logistica domiciliare, agendamento, prezzi SDF"],["Gestione rete medici a contratto","Rapporto operativo, disponibilità, onboarding medici"],["Educazione scientifica verso utenti e ambassador","Cosa diciamo sui biomarcatori, come lo diciamo"],["Gestione protocollo accoglienza cliente SDF","Dal quiz alla prenotazione esame — flusso operativo"]]},
+];
+
+const domandeTesti = [
+  "Qual è la cosa più importante che fai per SDF in questo momento?",
+  "Qual è la cosa che ti toglie più energia o tempo e che vorresti smettere di fare? A chi la daresti?",
+  "C'è qualcosa che vorresti fare in SDF ma nessuno te lo ha ancora chiesto o assegnato?",
+  "Cosa NON vuoi fare, in nessun caso?",
+  "Con chi nel team lavori meglio? Con chi fatichi di più?",
+  "Se SDF tra 2 anni fosse quello che immagini, qual sarebbe il tuo ruolo?",
+  "Quali competenze hai che SDF non sta ancora usando abbastanza?",
+  "C'è qualcosa che ti aspetti da SDF che non è ancora chiaro o formalizzato?"
+];
+
+let allData = [];
+let currentIdx = 0;
+
+function doLogin() {
+  const pwd = document.getElementById('pwdInput').value;
+  if (pwd === PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    loadData();
+  } else {
+    document.getElementById('loginErr').textContent = 'Password errata.';
+  }
+}
+
+function doLogout() {
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwdInput').value = '';
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/mappatura_ruoli?select=*&order=created_at.asc`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    });
+    allData = await res.json();
+    renderTabs();
+    if (allData.length > 0) renderPerson(0);
+    else document.getElementById('content').innerHTML = '<div class="empty-state">Nessuna risposta ancora ricevuta.</div>';
+    document.getElementById('countBadge').textContent = `${allData.length} rispost${allData.length === 1 ? 'a' : 'e'}`;
+  } catch(e) {
+    document.getElementById('content').innerHTML = '<div class="empty-state">Errore nel caricamento.</div>';
+  }
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('personTabs');
+  tabs.innerHTML = '';
+  allData.forEach((row, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'person-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = row.nome;
+    tab.onclick = () => { currentIdx = i; document.querySelectorAll('.person-tab').forEach((t,j)=>t.classList.toggle('active',j===i)); renderPerson(i); };
+    tabs.appendChild(tab);
+  });
+}
+
+function renderPerson(idx) {
+  const row = allData[idx];
+  const mansioni = row.mansioni || [];
+  const domande = row.domande || {};
+
+  const cx = mansioni.filter(m => m.stato === 'in_corso').length;
+  const cp = mansioni.filter(m => m.stato === 'da_aggiungere').length;
+  const cm = mansioni.filter(m => m.stato === 'da_delegare').length;
+
+  let html = `
+    <div class="meta">Compilato da <strong>${row.nome}</strong> il <strong>${row.data_compilazione || '—'}</strong></div>
+    <div class="summary-bar">
+      <div class="sum-item"><div class="sum-badge bx">X</div><span class="sc">${cx}</span><span>in corso</span></div>
+      <div class="sum-item"><div class="sum-badge bp">+</div><span class="sc">${cp}</span><span>da aggiungere</span></div>
+      <div class="sum-item"><div class="sum-badge bm">−</div><span class="sc">${cm}</span><span>da delegare</span></div>
+    </div>`;
+
+  // Mansioni per sezione
+  secs.forEach(sec => {
+    const secMansioni = sec.items.map(item => {
+      return mansioni.find(m => m.mansione === item[0]) || null;
+    });
+    const hasAny = secMansioni.some(m => m !== null);
+    if (!hasAny) return;
+
+    html += `<div class="section"><div class="sec-title${sec.new?' new':''}">${sec.t}</div><div class="rows">`;
+
+    sec.items.forEach((item, ii) => {
+      const m = secMansioni[ii];
+      if (!m) return;
+
+      let badges = '';
+      if (m.stato === 'in_corso') badges += `<span class="badge bx">X in corso</span>`;
+      if (m.stato === 'da_aggiungere') badges += `<span class="badge bp">+ aggiungere</span>`;
+      if (m.stato === 'da_delegare') badges += `<span class="badge bm">− delegare</span>`;
+
+      const delega = m.delega_a ? `<div class="delega">→ ${m.delega_a}</div>` : '';
+
+      html += `<div class="row${sec.new?' highlight':''}">
+        <div class="row-label">${item[0]}<span>${item[1]}</span></div>
+        <div class="row-right"><div class="badges">${badges}</div>${delega}</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  // Domande aperte
+  const domKeys = Object.keys(domande);
+  if (domKeys.length > 0) {
+    html += `<div class="open-q"><div class="oq-title">Domande aperte</div>`;
+    for (let i = 1; i <= 8; i++) {
+      const key = `q${i}`;
+      const d = domande[key];
+      html += `<div class="q-card">
+        <div class="q-num">0${i}</div>
+        <div class="q-text">${domandeTesti[i-1]}</div>
+        ${d ? `<div class="q-answer">${d.risposta}</div>` : `<div class="q-empty">Non risposto</div>`}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+</script>
+</body>
+</html>
