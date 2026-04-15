@@ -325,9 +325,19 @@ async function submitForm(){
   };
 
   try{
-    // Prima prova PATCH (aggiorna record esistente con stesso nome)
-    const patch=await fetch(`${SB_URL}/rest/v1/mappatura_ruoli?nome=eq.${encodeURIComponent(nome)}`,{
-      method:'PATCH',
+    // Cancella eventuale record esistente con lo stesso nome
+    await fetch(`${SB_URL}/rest/v1/mappatura_ruoli?nome=eq.${encodeURIComponent(nome)}`,{
+      method:'DELETE',
+      headers:{
+        'apikey':SB_KEY,
+        'Authorization':`Bearer ${SB_KEY}`,
+        'Prefer':'return=minimal'
+      }
+    });
+
+    // Inserisce sempre un record nuovo
+    const post=await fetch(`${SB_URL}/rest/v1/mappatura_ruoli`,{
+      method:'POST',
       headers:{
         'Content-Type':'application/json',
         'apikey':SB_KEY,
@@ -336,26 +346,7 @@ async function submitForm(){
       },
       body:JSON.stringify(payload)
     });
-    if(!patch.ok) throw new Error(`PATCH HTTP ${patch.status}`);
-
-    // Controlla quante righe sono state aggiornate
-    const updated=patch.headers.get('content-range');
-    const count=updated ? parseInt(updated.split('/')[1]) : 0;
-
-    if(count===0){
-      // Nessun record esistente: inserisce nuovo
-      const post=await fetch(`${SB_URL}/rest/v1/mappatura_ruoli`,{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'apikey':SB_KEY,
-          'Authorization':`Bearer ${SB_KEY}`,
-          'Prefer':'return=minimal'
-        },
-        body:JSON.stringify(payload)
-      });
-      if(!post.ok) throw new Error(`POST HTTP ${post.status}`);
-    }
+    if(!post.ok) throw new Error(`POST HTTP ${post.status}`);
 
     document.getElementById('successScreen').classList.add('show');
     window.scrollTo(0,0);
