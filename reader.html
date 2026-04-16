@@ -27,6 +27,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .topbar h1{font-size:16px;font-weight:600;}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .count-badge{font-size:13px;color:#888;}
+.export-btn{font-size:13px;color:#1a1a1a;cursor:pointer;background:none;border:1px solid #ddd;border-radius:7px;padding:5px 12px;font-weight:500;transition:background .12s,border-color .12s;}
+.export-btn:hover{background:#f5f5f5;border-color:#999;}
 .logout-btn{font-size:13px;color:#888;cursor:pointer;background:none;border:none;text-decoration:underline;}
 
 .persons{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;border-bottom:1px solid #e5e5e5;background:#fff;}
@@ -94,6 +96,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <h1>Mappatura Ruoli — SDF</h1>
     <div class="topbar-right">
       <span class="count-badge" id="countBadge"></span>
+      <button class="export-btn" onclick="exportJSON()">Esporta JSON</button>
       <button class="logout-btn" onclick="doLogout()">Esci</button>
     </div>
   </div>
@@ -189,7 +192,7 @@ const secs=[
     ["Gestione team creativo","Briefing, feedback, consegne, qualità"],
     ["Utilizzo AI per accelerare produzione contenuti","Immagini, testi, video AI-assisted"],
   ]},
-  {t:"Merchandising & prodotti fisici SDF \u2605 NUOVO",new:true,items:[
+  {t:"Merchandising & prodotti fisici SDF ★ NUOVO",new:true,items:[
     ["Direzione creativa e sviluppo design merchandising","Concept visivo, grafiche, varianti colore per abbigliamento e accessori SDF"],
     ["Selezione fornitori e gestione produzione capi","Qualità materiali, costi, tempi, riordini, taglie"],
     ["Sviluppo nuove linee prodotto (abbigliamento & accessori)","Linea donna, nuovi capi, gadget — concept, produzione, lancio"],
@@ -228,6 +231,65 @@ function doLogout() {
   document.getElementById('app').classList.remove('show');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('pwdInput').value = '';
+}
+
+function exportJSON() {
+  if (!allData || allData.length === 0) {
+    alert('Nessun dato da esportare.');
+    return;
+  }
+
+  const exportData = allData.map(row => {
+    const mansioni = row.mansioni || [];
+    const domande = row.domande || {};
+
+    const mansioniArricchite = mansioni.map(m => {
+      const sezione = secs.find(s => s.items.some(item => item[0] === m.mansione));
+      const itemInfo = sezione ? sezione.items.find(item => item[0] === m.mansione) : null;
+      return {
+        mansione: m.mansione,
+        descrizione: itemInfo ? itemInfo[1] : '',
+        sezione: sezione ? sezione.t : '',
+        stato: m.stato,
+        delega_a: m.delega_a || null
+      };
+    });
+
+    const domandeArricchite = {};
+    for (let i = 1; i <= 8; i++) {
+      const key = `q${i}`;
+      domandeArricchite[key] = {
+        domanda: domandeTesti[i - 1],
+        risposta: domande[key] ? domande[key].risposta : null
+      };
+    }
+
+    return {
+      nome: row.nome,
+      data_compilazione: row.data_compilazione || null,
+      created_at: row.created_at || null,
+      riepilogo: {
+        in_corso: mansioni.filter(m => m.stato === 'in_corso').length,
+        da_aggiungere: mansioni.filter(m => m.stato === 'da_aggiungere').length,
+        da_delegare: mansioni.filter(m => m.stato === 'da_delegare').length
+      },
+      mansioni: mansioniArricchite,
+      domande_aperte: domandeArricchite
+    };
+  });
+
+  const json = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `mappatura-sdf-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 async function loadData() {
