@@ -233,63 +233,73 @@ function doLogout() {
   document.getElementById('pwdInput').value = '';
 }
 
+function buildPersonExport(row) {
+  const mansioni = row.mansioni || [];
+  const domande = row.domande || {};
+
+  const mansioniArricchite = mansioni.map(m => {
+    const sezione = secs.find(s => s.items.some(item => item[0] === m.mansione));
+    const itemInfo = sezione ? sezione.items.find(item => item[0] === m.mansione) : null;
+    return {
+      mansione: m.mansione,
+      descrizione: itemInfo ? itemInfo[1] : '',
+      sezione: sezione ? sezione.t : '',
+      stato: m.stato,
+      delega_a: m.delega_a || null
+    };
+  });
+
+  const domandeArricchite = {};
+  for (let i = 1; i <= 8; i++) {
+    const key = `q${i}`;
+    domandeArricchite[key] = {
+      domanda: domandeTesti[i - 1],
+      risposta: domande[key] ? domande[key].risposta : null
+    };
+  }
+
+  return {
+    nome: row.nome,
+    data_compilazione: row.data_compilazione || null,
+    created_at: row.created_at || null,
+    riepilogo: {
+      in_corso: mansioni.filter(m => m.stato === 'in_corso').length,
+      da_aggiungere: mansioni.filter(m => m.stato === 'da_aggiungere').length,
+      da_delegare: mansioni.filter(m => m.stato === 'da_delegare').length
+    },
+    mansioni: mansioniArricchite,
+    domande_aperte: domandeArricchite
+  };
+}
+
+function downloadFile(data, filename) {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function exportJSON() {
   if (!allData || allData.length === 0) {
     alert('Nessun dato da esportare.');
     return;
   }
 
-  const exportData = allData.map(row => {
-    const mansioni = row.mansioni || [];
-    const domande = row.domande || {};
+  const dateStr = new Date().toISOString().slice(0, 10);
 
-    const mansioniArricchite = mansioni.map(m => {
-      const sezione = secs.find(s => s.items.some(item => item[0] === m.mansione));
-      const itemInfo = sezione ? sezione.items.find(item => item[0] === m.mansione) : null;
-      return {
-        mansione: m.mansione,
-        descrizione: itemInfo ? itemInfo[1] : '',
-        sezione: sezione ? sezione.t : '',
-        stato: m.stato,
-        delega_a: m.delega_a || null
-      };
-    });
-
-    const domandeArricchite = {};
-    for (let i = 1; i <= 8; i++) {
-      const key = `q${i}`;
-      domandeArricchite[key] = {
-        domanda: domandeTesti[i - 1],
-        risposta: domande[key] ? domande[key].risposta : null
-      };
-    }
-
-    return {
-      nome: row.nome,
-      data_compilazione: row.data_compilazione || null,
-      created_at: row.created_at || null,
-      riepilogo: {
-        in_corso: mansioni.filter(m => m.stato === 'in_corso').length,
-        da_aggiungere: mansioni.filter(m => m.stato === 'da_aggiungere').length,
-        da_delegare: mansioni.filter(m => m.stato === 'da_delegare').length
-      },
-      mansioni: mansioniArricchite,
-      domande_aperte: domandeArricchite
-    };
+  allData.forEach((row, i) => {
+    setTimeout(() => {
+      const data = buildPersonExport(row);
+      const safeName = row.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+      downloadFile(data, `mappatura-sdf-${safeName}-${dateStr}.json`);
+    }, i * 400);
   });
-
-  const json = JSON.stringify(exportData, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `mappatura-sdf-${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 async function loadData() {
